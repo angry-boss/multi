@@ -113,6 +113,6 @@ module Multi
   # Tenant specified is unknown
   MultiNotFound = Class.new(MultiError)
 
-  # The Tenant attempting to be created already exists
+  #The Tenant attempting to be created already exists
   TenantExists = Class.new(MultiError)
 end
