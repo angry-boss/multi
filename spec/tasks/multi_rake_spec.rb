@@ -8,7 +8,7 @@ describe "apartment rake tasks" do
   before do
     @rake = Rake::Application.new
     Rake.application = @rake
-    load 'tasks/multi.rake'
+    load 'tasks/multi_rake'
     # stub out rails tasks
     Rake::Task.define_task('db:migrate')
     Rake::Task.define_task('db:seed')
