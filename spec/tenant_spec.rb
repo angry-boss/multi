@@ -1,24 +1,24 @@
 require 'spec_helper'
 
 describe Multi::Tenant do
-  context "using mysql", database: :mysql do
-
-    before { subject.reload!(config) }
-
-    describe "#adapter" do
-      it "should load mysql adapter" do
-        subject.adapter
-        expect(Multi::Adapters::Mysql2Adapter).to be_a(Class)
-      end
-    end
+  # context "using mysql", database: :mysql do
+  #
+  #   before { subject.reload!(config) }
+  #
+  #   describe "#adapter" do
+  #     it "should load mysql adapter" do
+  #       subject.adapter
+  #       expect(Multi::Adapters::Mysql2Adapter).to be_a(Class)
+  #     end
+  #   end
 
     # TODO this doesn't belong here, but there aren't integration tests currently for mysql
     # where to put???
-    describe "exception recovery", :type => :request do
-      before do
-        subject.create db1
-      end
-      after{ subject.drop db1 }
+    # describe "exception recovery", :type => :request do
+    #   before do
+    #     subject.create db1
+    #   end
+    #   after{ subject.drop db1 }
 
       # it "should recover from incorrect database" do
       #   session = Capybara::Session.new(:rack_test, Capybara.app)
@@ -28,28 +28,28 @@ describe Multi::Tenant do
       #   }.to raise_error
       #   session.visit("http://#{db1}.com")
       # end
-    end
+    # end
 
     # TODO re-organize these tests
-    context "with prefix and schemas" do
-      describe "#create" do
-        before do
-          Multi.configure do |config|
-            config.prepend_environment = true
-            config.use_schemas = true
-          end
-
-          subject.reload!(config)
-        end
-
-        after { subject.drop "db_with_prefix" rescue nil }
-
-        it "should create a new database" do
-          subject.create "db_with_prefix"
-        end
-      end
-    end
-  end
+  #   context "with prefix and schemas" do
+  #     describe "#create" do
+  #       before do
+  #         Multi.configure do |config|
+  #           config.prepend_environment = true
+  #           config.use_schemas = true
+  #         end
+  #
+  #         subject.reload!(config)
+  #       end
+  #
+  #       after { subject.drop "db_with_prefix" rescue nil }
+  #
+  #       it "should create a new database" do
+  #         subject.create "db_with_prefix"
+  #       end
+  #     end
+  #   end
+  # end
 
   context "using postgresql", database: :postgresql do
     before do

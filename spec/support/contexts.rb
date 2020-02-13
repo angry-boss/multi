@@ -16,7 +16,7 @@ shared_context "with default schema", :default_schema => true do
 end
 
 # Some default setup for elevator specs
-shared_context "elevators", elevator: true do
+shared_context "logic", logic: true do
   let(:company1)  { mock_model(Company, database: db1).as_null_object }
   let(:company2)  { mock_model(Company, database: db2).as_null_object }
 
