@@ -38,7 +38,7 @@ describe "apartment rake tasks" do
       allow(Multi).to receive(:tenant_names).and_return tenant_names
     end
 
-    describe "apartment:migrate" do
+    describe "multi:migrate" do
       before do
         allow(ActiveRecord::Migrator).to receive(:migrate)   # don't care about this
       end

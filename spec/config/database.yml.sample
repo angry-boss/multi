@@ -8,7 +8,7 @@ connections:
     password:
     host: localhost
     port: 5432
-  development:
+  postgresql:
     adapter: postgresql
     database: multi_postgresql_development
     username: postgres
