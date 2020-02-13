@@ -8,12 +8,3 @@ connections:
     password:
     host: localhost
     port: 5432
-  postgresql:
-    adapter: postgresql
-    database: multi_postgresql_development
-    min_messages: WARNING
-    username: postgres
-    schema_search_path: public
-    password:
-    host: localhost
-    port: 5432
