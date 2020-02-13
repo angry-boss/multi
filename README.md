@@ -38,7 +38,7 @@ gem 'rails', '4.2.1', github: 'influitive/rails', tag: 'v4.2.1.memfix'
 Add the following to your Gemfile:
 
 ```ruby
-gem 'apartment'
+gem 'multi'
 ```
 
 Then generate your `Apartment` config file using
@@ -484,7 +484,7 @@ Note that you can disable the default migrating of all tenants with `db:migrate`
 
 Apartment supports parallelizing migrations into multiple threads when
 you have a large number of tenants. By default, parallel migrations is
-turned off. You can enable this by setting `parallel_migration_threads` to 
+turned off. You can enable this by setting `parallel_migration_threads` to
 the number of threads you want to use in your initializer.
 
 Keep in mind that because migrations are going to access the database,
