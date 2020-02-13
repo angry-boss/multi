@@ -31,7 +31,7 @@ task :default => :spec
 
 namespace :db do
   namespace :test do
-    task :prepare => %w{postgres:drop_db postgres:build_db mysql:drop_db mysql:build_db}
+    task :prepare => %w{postgres:drop_db postgres:build_db}
   end
 
   desc "copy sample database credential files over if real files don't exist"
@@ -75,33 +75,6 @@ namespace :postgres do
 
 end
 
-namespace :mysql do
-  require 'active_record'
-  require "#{File.join(File.dirname(__FILE__), 'spec', 'support', 'config')}"
-
-  desc 'Build the MySQL test databases'
-  task :build_db do
-    params = []
-    params << "-h #{my_config['host']}" if my_config['host']
-    params << "-u #{my_config['username']}" if my_config['username']
-    params << "-p#{my_config['password']}" if my_config['password']
-    %x{ mysqladmin #{params.join(' ')} create #{my_config['database']} } rescue "test db already exists"
-    ActiveRecord::Base.establish_connection my_config
-    migrate
-  end
-
-  desc "drop the MySQL test database"
-  task :drop_db do
-    puts "dropping database #{my_config['database']}"
-    params = []
-    params << "-h #{my_config['host']}" if my_config['host']
-    params << "-u #{my_config['username']}" if my_config['username']
-    params << "-p#{my_config['password']}" if my_config['password']
-    %x{ mysqladmin #{params.join(' ')} drop #{my_config['database']} --force}
-  end
-
-end
-
 # TODO clean this up
 def config
   Multi::Test.config['connections']
@@ -109,10 +82,6 @@ end
 
 def pg_config
   config['postgresql']
-end
-
-def my_config
-  config['mysql']
 end
 
 def activerecord_below_5_2?
