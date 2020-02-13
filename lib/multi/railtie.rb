@@ -34,7 +34,7 @@ module Multi
     end
     #   Ensure rake tasks are loaded
     rake_tasks do
-      load 'tasks/apartment.rake'
+      load 'tasks/multi.rake'
       require 'multi/tasks/enhancements' if Multi.db_migrate_tenants
     end
 

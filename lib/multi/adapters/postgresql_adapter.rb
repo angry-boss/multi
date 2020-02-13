@@ -63,7 +63,7 @@ module Multi
       #
       def connect_to_new(tenant = nil)
         return reset if tenant.nil?
-        raise ActiveRecord::StatementInvalid.new("Could not find schema #{tenant}") unless Apartment.connection.schema_exists?(tenant.to_s)
+        raise ActiveRecord::StatementInvalid.new("Could not find schema #{tenant}") unless Multi.connection.schema_exists?(tenant.to_s)
 
         @current = tenant.to_s
         Multi.connection.schema_search_path = full_search_path

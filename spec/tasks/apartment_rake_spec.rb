@@ -49,7 +49,7 @@ describe "apartment rake tasks" do
       end
     end
 
-    describe "apartment:migrate:up" do
+    describe "multi:migrate:up" do
 
       context "without a version" do
         before do
@@ -58,7 +58,7 @@ describe "apartment rake tasks" do
 
         it "requires a version to migrate to" do
           expect{
-            @rake['apartment:migrate:up'].invoke
+            @rake['multi:migrate:up'].invoke
           }.to raise_error("VERSION is required")
         end
       end
@@ -70,13 +70,13 @@ describe "apartment rake tasks" do
         end
 
         it "migrates up to a specific version" do
-          expect(Apartment::Migrator).to receive(:run).with(:up, anything, version.to_i).exactly(tenant_count).times
+          expect(Multi::Migrator).to receive(:run).with(:up, anything, version.to_i).exactly(tenant_count).times
           @rake['multi:migrate:up'].invoke
         end
       end
     end
 
-    describe "apartment:migrate:down" do
+    describe "multi:migrate:down" do
 
       context "without a version" do
         before do
@@ -103,7 +103,7 @@ describe "apartment rake tasks" do
       end
     end
 
-    describe "apartment:rollback" do
+    describe "multi:rollback" do
       let(:step){ '3' }
 
       it "should rollback dbs" do
@@ -118,7 +118,7 @@ describe "apartment rake tasks" do
       end
     end
 
-    describe "apartment:drop" do
+    describe "multi:drop" do
       it "should migrate public and all multi-tenant dbs" do
         expect(Multi::Tenant).to receive(:drop).exactly(tenant_count).times
         @rake['multi:drop'].invoke

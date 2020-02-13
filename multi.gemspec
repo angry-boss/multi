@@ -3,12 +3,12 @@ $: << File.expand_path("../lib", __FILE__)
 require "multi/version"
 
 Gem::Specification.new do |s|
-  s.name = %q{apartment}
+  s.name = %q{multi}
   s.version = Multi::VERSION
 
   s.authors       = ["Ilmira Shaikhraznova"]
   s.summary       = %q{A Ruby gem for managing database multitenancy}
-  s.description   = %q{Apartment allows Rack applications to deal with database multitenancy through ActiveRecord}
+  s.description   = %q{Multi allows Rack applications to deal with database multitenancy through ActiveRecord}
   s.email         = ["
 ilmirashaikhraznova@gmail.com"]
   s.files         = `git ls-files`.split($/)

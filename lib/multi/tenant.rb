@@ -1,6 +1,6 @@
 require 'forwardable'
 
-module Apartment
+module Multi
   #   The main entry point to Apartment functions
   #
   module Tenant
@@ -20,11 +20,11 @@ module Apartment
     #   Fetch the proper multi-tenant adapter based on Rails config
     #   @return {subclass of Apartment::AbstractAdapter}
     def adapter
-      Thread.current[:apartment_adapter] ||= begin
+      Thread.current[:multi_adapter] ||= begin
         adapter_method = "#{config[:adapter]}_adapter"
 
         begin
-          require "apartment/adapters/#{adapter_method}"
+          require "multi/adapters/#{adapter_method}"
         rescue LoadError
           raise "The adapter `#{adapter_method}` is not yet supported"
         end
@@ -39,7 +39,7 @@ module Apartment
 
     #   Reset config and adapter so they are regenerated
     def reload!(config = nil)
-      Thread.current[:apartment_adapter] = nil
+      Thread.current[:multi_adapter] = nil
       @config = config
     end
 
@@ -47,7 +47,7 @@ module Apartment
 
     #   Fetch the rails database configuration
     def config
-      @config ||= Apartment.connection_config
+      @config ||= Multi.connection_config
     end
   end
 end

@@ -70,7 +70,7 @@ describe 'query caching' do
       ActiveRecord::Base.connection.enable_query_cache!
 
       Multi::Tenant.switch! db_name
-      expect(Apartment.connection.query_cache_enabled).to be true
+      expect(Multi.connection.query_cache_enabled).to be true
 
       ActiveRecord::Base.connection.disable_query_cache!
 

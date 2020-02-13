@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-shared_examples_for "a generic apartment adapter" do
+shared_examples_for "a generic multi adapter" do
   include Multi::Spec::AdapterRequirements
 
   before {
@@ -59,7 +59,7 @@ shared_examples_for "a generic apartment adapter" do
       subject.switch(db2){ expect(User.count).to eq(@count + 1) }
     end
 
-    it "should raise error when the schema.rb is missing unless Apartment.use_sql is set to true" do
+    it "should raise error when the schema.rb is missing unless Multi.use_sql is set to true" do
       next if Multi.use_sql
 
       subject.drop(db1)
@@ -97,7 +97,7 @@ shared_examples_for "a generic apartment adapter" do
     it "should raise an error if database is invalid" do
       expect {
         subject.switch! 'unknown_database'
-      }.to raise_error(Multi::ApartmentError)
+      }.to raise_error(Multi::MultiError)
     end
   end
 

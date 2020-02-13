@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'apartment/adapters/sqlite3_adapter'
+require 'multi/adapters/sqlite3_adapter'
 
-describe Apartment::Adapters::Sqlite3Adapter, database: :sqlite do
+describe Multi::Adapters::Sqlite3Adapter, database: :sqlite do
   unless defined?(JRUBY_VERSION)
 
-    subject{ Apartment::Tenant.sqlite3_adapter config }
+    subject{ Multi::Tenant.sqlite3_adapter config }
 
     context "using connections" do
       def tenant_names
@@ -13,14 +13,14 @@ describe Apartment::Adapters::Sqlite3Adapter, database: :sqlite do
       end
 
       let(:default_tenant) do
-        subject.switch { File.basename(Apartment::Test.config['connections']['sqlite']['database'], '.sqlite3') }
+        subject.switch { File.basename(Multi::Test.config['connections']['sqlite']['database'], '.sqlite3') }
       end
 
-      it_should_behave_like "a generic apartment adapter"
-      it_should_behave_like "a connection based apartment adapter"
+      it_should_behave_like "a generic multi adapter"
+      it_should_behave_like "a connection based multi adapter"
 
       after(:all) do
-        File.delete(Apartment::Test.config['connections']['sqlite']['database'])
+        File.delete(Multi::Test.config['connections']['sqlite']['database'])
       end
     end
 
@@ -29,7 +29,7 @@ describe Apartment::Adapters::Sqlite3Adapter, database: :sqlite do
       describe "#prepend" do
         let (:db_name) { "db_with_prefix" }
         before do
-          Apartment.configure do |config|
+          Multi.configure do |config|
             config.prepend_environment = true
             config.append_environment = false
           end
@@ -47,7 +47,7 @@ describe Apartment::Adapters::Sqlite3Adapter, database: :sqlite do
       describe "#neither" do
         let (:db_name) { "db_without_prefix_suffix" }
         before do
-          Apartment.configure { |config| config.prepend_environment = config.append_environment = false }
+          Multi.configure { |config| config.prepend_environment = config.append_environment = false }
         end
 
         after { subject.drop db_name rescue nil }
@@ -62,7 +62,7 @@ describe Apartment::Adapters::Sqlite3Adapter, database: :sqlite do
       describe "#append" do
         let (:db_name) { "db_with_suffix" }
         before do
-          Apartment.configure do |config|
+          Multi.configure do |config|
             config.prepend_environment = false
             config.append_environment = true
           end

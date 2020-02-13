@@ -32,7 +32,7 @@ describe "apartment rake tasks", database: :postgresql do
   context "with x number of databases" do
 
     let(:x){ 1 + rand(5) }    # random number of dbs to create
-    let(:db_names){ x.times.map{ Apartment::Test.next_db } }
+    let(:db_names){ x.times.map{ Multi::Test.next_db } }
     let!(:company_count){ db_names.length }
 
     before do
@@ -96,7 +96,7 @@ describe "apartment rake tasks", database: :postgresql do
       end
     end
 
-    describe "apartment:seed" do
+    describe "multi:seed" do
       it "should seed all databases" do
         expect(Multi::Tenant).to receive(:seed).exactly(company_count).times
 

@@ -67,7 +67,7 @@ module Multi
       end
 
       #   to iterate
-      def each(tenants = Apartment.tenant_names)
+      def each(tenants = Multi.tenant_names)
         tenants.each do |tenant|
           switch(tenant){ yield tenant }
         end
