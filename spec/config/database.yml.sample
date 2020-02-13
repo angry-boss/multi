@@ -8,3 +8,12 @@ connections:
     password:
     host: localhost
     port: 5432
+  development:
+    adapter: postgresql
+    database: multi_postgresql_development
+    username: postgres
+    min_messages: WARNING
+    pool: 5
+    timeout: 5000
+    host: localhost
+    port: 5432
