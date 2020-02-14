@@ -1,39 +1,3 @@
-<<<<<<< HEAD
-### Video Tutorial
-
-How to separate your application data into different accounts or companies.
-[GoRails #47](https://gorails.com/episodes/multitenancy-with-apartment)
-
-### Creating new Tenants
-
-```ruby
-Multi::Tenant.create('tenant_name')
-```
-
-If you're using the [prepend environment](https://github.com/influitive/apartment#handling-environments) config option or you AREN'T using Postgresql Schemas, this will create a tenant in the following format: "#{environment}\_tenant_name".
-In the case of a sqlite database, this will be created in your 'db/' folder. With
-other databases, the tenant will be created as a new DB within the system.
-
-When you create a new tenant, all migrations will be run against that tenant, so it will be
-up to date when create returns.
-
-#### Notes on PostgreSQL
-
-PostgreSQL works slightly differently than other databases when creating a new tenant. If you
-are using PostgreSQL, Apartment by default will set up a new [schema](http://www.postgresql.org/docs/9.3/static/ddl-schemas.html)
-and migrate into there. This provides better performance, and allows Apartment to work on systems like Heroku, which
-would not allow a full new database to be created.
-
-One can optionally use the full database creation instead if they want, though this is not recommended
-
-### Switching Tenants
-
-To switch tenants using Apartment, use the following command:
-
-```ruby
-Apartment::Tenant.switch('tenant_name') do
-  # ...
-=======
 # Multi-tenancy
 Config:
 
@@ -47,118 +11,9 @@ require_relative '../lib/multi_tenancy/multi/logic/subdomain'
 
 Multi.configure do |config|
   config.middleware.use Multi::Logic::Subdomain
->>>>>>> 32fffcbe59dba4c95eba98a30b7925682dcf8e58
 end
 ``
 
-<<<<<<< HEAD
-When switch is called, all requests coming to ActiveRecord will be routed to the tenant you specify.
-
-### Switching Tenants per request
-
-You can have Apartment route to the appropriate tenant by adding some Rack middleware.
-```ruby
-# config/application.rb
-require 'multi/logic/subdomain'
-```
-#### Switch on subdomain
-
-In house, we use the subdomain elevator, which analyzes the subdomain of the request and switches to a tenant schema of the same name. It can be used like so:
-
-```ruby
-# application.rb
-module MyApplication
-  class Application < Rails::Application
-    config.middleware.use Multi::Logic::Subdomain
-  end
-end
-```
-
-to exclude a domain
-```ruby
-# config/initializers/multi/subdomain_exclusions.rb
-Multi::Logic::Subdomain.excluded_subdomains = ['www']
-```
-
-#### Middleware Considerations
-
-```ruby
-Rails.application.config.middleware.use Multi::Logic::Subdomain
-```
-
-### Dropping Tenants
-
-To drop tenants using Apartment, use the following command:
-
-```ruby
-Multi::Tenant.drop('tenant_name')
-```
-When method is called, the schema is dropped and all data from itself will be lost.
-
-## Config
-
-config/initializers/apartment.rb
-
-To set config options, add this to your initializer:
-
-```ruby
-Apartment.configure do |config|
-  # set your options (described below) here
-end
-```
-
-### Excluding models
-
-If you have some models that should always access the 'public' tenant, you can specify this by configuring Apartment using `Multi.configure`. This will yield a config object for you. You can set excluded models like so:
-
-```ruby
-config.excluded_models = ["User", "Company"]        # remain in the global (public) namespace
-```
-
-### Postgresql Schemas
-
-## Providing a Different default_schema
-
-By default, ActiveRecord will use `"$user", public` as the default `schema_search_path`.
-
-```ruby
-config.default_schema = "some_other_schema"
-```
-
-all excluded models will use this schema as the table name prefix instead of `public` and `reset` on `Multi::Tenant`
-
-## Persistent Schemas
- Enter `persistent_schemas`. configure a list of other schemas that will always remain in the search path
-
-```ruby
-config.persistent_schemas = ['some', 'other', 'schemas']
-```
-
-### Installing Extensions into Persistent Schemas
-
-Persistent Schemas have numerous useful applications.  [Hstore](http://www.postgresql.org/docs/9.1/static/hstore.html), for instance, is a popular storage engine for Postgresql. In order to use extensions such as Hstore, you have to install it to a specific schema and have that always in the `schema_search_path`.
-
-When using extensions, keep in mind:
-* Extensions can only be installed into one schema per database, so we will want to install it into a schema that is always available in the `schema_search_path`
-* The schema and extension need to be created in the database *before* they are referenced in migrations, database.yml or apartment.
-* There does not seem to be a way to create the schema and extension using standard rails migrations.
-* Rails db:test:prepare deletes and recreates the database, so it needs to be easy for the extension schema to be recreated here.
-
-#### 1. Ensure the extensions schema is created when the database is created
-
-```ruby
-# lib/tasks/db_enhancements.rake
-
-####### Important information ####################
-# This file is used to setup a shared extensions #
-# within a dedicated schema. This gives us the   #
-# advantage of only needing to enable extensions #
-# in one place.                                  #
-#                                                #
-# This task should be run AFTER db:create but    #
-# BEFORE db:migrate.                             #
-##################################################
-=======
 Then,
 
 1. Create
@@ -167,7 +22,6 @@ Then,
 Put into file
 
 ``                      
->>>>>>> 32fffcbe59dba4c95eba98a30b7925682dcf8e58
 
 namespace :db do
   desc 'Also create shared_extensions Schema'
@@ -354,10 +208,7 @@ module Multi
   end
 end
 ```
-<<<<<<< HEAD
-=======
 
 ## Tests
 
 * Rake tasks (in multi-tenancy) setup dbs for tests
->>>>>>> 32fffcbe59dba4c95eba98a30b7925682dcf8e58
