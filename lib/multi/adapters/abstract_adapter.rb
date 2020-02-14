@@ -169,7 +169,6 @@ module Multi
       alias_method :load_or_abort, :load_or_raise
 
       #   Exceptions to rescue from on db operations
-      #
       def rescuable_exceptions
         [ActiveRecord::ActiveRecordError] + Array(rescue_from)
       end
@@ -186,7 +185,6 @@ module Multi
 
      def with_neutral_connection(tenant, &block)
         if Multi.with_multi_server_setup
-          # neutral connection is necessary whenever you need to create/remove a database from a server.
           # example: when you use postgresql, you need to connect to the default postgresql database before you create your own.
           SeparateDbConnectionHandler.establish_connection(multi_tenantify(tenant, false))
           yield(SeparateDbConnectionHandler.connection)

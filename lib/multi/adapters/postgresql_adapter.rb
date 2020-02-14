@@ -32,9 +32,7 @@ module Multi
       end
 
       #   Reset schema search path to the default schema_search_path
-      #
-      #   @return {String} default schema search path
-      #
+      #  default schema search path
       def reset
         @current = default_tenant
         Multi.connection.schema_search_path = full_search_path
@@ -60,7 +58,6 @@ module Multi
       end
 
       #   Set schema search path to new schema
-      #
       def connect_to_new(tenant = nil)
         return reset if tenant.nil?
         raise ActiveRecord::StatementInvalid.new("Could not find schema #{tenant}") unless Multi.connection.schema_exists?(tenant.to_s)
@@ -86,7 +83,6 @@ module Multi
       end
 
       #   Generate the final search path to set including persistent_schemas
-      #
       def full_search_path
         persistent_schemas.map(&:inspect).join(", ")
       end
@@ -95,9 +91,7 @@ module Multi
         [@current, Multi.persistent_schemas].flatten
       end
 
-      def postgresql_version
-        # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter#postgresql_version is
-        # public from Rails 5.0.
+      def postgresql_version # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter#postgresql_version is public from Rails 5.0.
         Multi.connection.send(:postgresql_version)
       end
     end
@@ -127,7 +121,6 @@ module Multi
       # Re-set search path after the schema is imported.
       # Postgres now sets search path to empty before dumping the schema
       # and it mut be reset
-      #
       def preserving_search_path
         search_path = Multi.connection.execute("show search_path").first["search_path"]
         yield
@@ -135,23 +128,18 @@ module Multi
       end
 
       # Clone default schema into new schema named after current tenant
-      #
       def clone_pg_schema
         pg_schema_sql = patch_search_path(pg_dump_schema)
         Multi.connection.execute(pg_schema_sql)
       end
 
       # Copy data from schema_migrations into new schema
-      #
       def copy_schema_migrations
         pg_migrations_data = patch_search_path(pg_dump_schema_migrations_data)
         Multi.connection.execute(pg_migrations_data)
       end
 
-      #   Dump postgres default schema
-      #
-      #   @return {String} raw SQL contaning only postgres schema dump
-      #
+      #  raw SQL contaning only schema dump
       def pg_dump_schema
 
         # Skip excluded tables? :/
@@ -165,16 +153,12 @@ module Multi
         with_pg_env { `pg_dump -s -x -O -n #{default_tenant} #{dbname}` }
       end
 
-      #   Dump data from schema_migrations table
-      #
       #   @return {String} raw SQL contaning inserts with data from schema_migrations
-      #
       def pg_dump_schema_migrations_data
         with_pg_env { `pg_dump -a --inserts -t #{default_tenant}.schema_migrations -t #{default_tenant}.ar_internal_metadata #{dbname}` }
       end
 
       # Temporary set Postgresql related environment variables if there are in @config
-      #
       def with_pg_env(&block)
         pghost, pgport, pguser, pgpassword =  ENV['PGHOST'], ENV['PGPORT'], ENV['PGUSER'], ENV['PGPASSWORD']
 
@@ -189,9 +173,7 @@ module Multi
       end
 
       #   Remove "SET search_path ..." line from SQL dump and prepend search_path set to current tenant
-      #
       #   @return {String} patched raw SQL dump
-      #
       def patch_search_path(sql)
         search_path = "SET search_path = \"#{current}\", #{default_tenant};"
 
@@ -213,13 +195,11 @@ module Multi
       end
 
       #   Checks if any of regexps matches against input
-      #
       def check_input_against_regexps(input, regexps)
         regexps.select {|c| input.match c}
       end
 
       #   Collect table names from AR Models
-      #
       def collect_table_names(models)
         models.map do |m|
           m.constantize.table_name
@@ -227,7 +207,6 @@ module Multi
       end
 
       # Convenience method for current database name
-      #
       def dbname
         Multi.connection_config[:database]
       end

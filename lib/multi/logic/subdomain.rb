@@ -2,7 +2,7 @@ require 'multi/logic/generic'
 require 'public_suffix'
 
 module Multi
-  module Elevators
+  module Logic
     #   Provides a rack based tenant switching solution based on subdomains
     #   Assumes that tenant name should match subdomain
     #

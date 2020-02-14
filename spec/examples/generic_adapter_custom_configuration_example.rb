@@ -76,15 +76,7 @@ shared_examples_for "a generic apartment adapter able to handle custom configura
         database: 'override_database',
         password: 'override_password',
         username: 'overridepostgres'
-      },
-      mysql: {
-        adapter:  'mysql2',
-        database: 'override_database',
-        username: 'root'
-      },
-      sqlite: {
-        adapter:  'sqlite3',
-        database: 'override_database'
+      }
       }
     }
   end

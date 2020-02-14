@@ -18,7 +18,6 @@ describe Multi::Adapters::PostgresqlAdapter, database: :postgresql do
       let(:default_tenant) { subject.switch { ActiveRecord::Base.connection.schema_search_path.gsub('"', '') } }
 
       it_should_behave_like "a generic multi adapter"
-      it_should_behave_like "a schema based multi adapter"
     end
 
     context "using schemas with SQL dump" do
@@ -33,7 +32,6 @@ describe Multi::Adapters::PostgresqlAdapter, database: :postgresql do
       let(:default_tenant) { subject.switch { ActiveRecord::Base.connection.schema_search_path.gsub('"', '') } }
 
       it_should_behave_like "a generic multi adapter"
-      it_should_behave_like "a schema based multi adapter"
 
       it 'allows for dashes in the schema name' do
         expect { Multi::Tenant.create('has-dashes') }.to_not raise_error
@@ -54,8 +52,6 @@ describe Multi::Adapters::PostgresqlAdapter, database: :postgresql do
       let(:default_tenant) { subject.switch { ActiveRecord::Base.connection.current_database } }
 
       it_should_behave_like "a generic multi adapter"
-      it_should_behave_like "a generic multi adapter able to handle custom configuration"
-      it_should_behave_like "a connection based multi adapter"
     end
   end
 end

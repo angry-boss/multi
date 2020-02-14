@@ -1,11 +1,11 @@
-require 'bundler' rescue 'You must `gem install bundler` and `bundle install` to run rake tasks'
-Bundler.setup
-Bundler::GemHelper.install_tasks
-
+require 'bundler'
 require 'appraisal'
-
+require "rubygems"
 require "rspec"
 require "rspec/core/rake_task"
+
+Bundler.setup
+Bundler::GemHelper.install_tasks
 
 RSpec::Core::RakeTask.new(:spec => %w{ db:copy_credentials db:test:prepare }) do |spec|
   spec.pattern = "spec/**/*_spec.rb"

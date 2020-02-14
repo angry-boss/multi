@@ -1,64 +1,3 @@
-# Apartment
-
-[![Gem Version](https://badge.fury.io/rb/apartment.svg)](https://badge.fury.io/rb/apartment)
-[![Code Climate](https://codeclimate.com/github/influitive/apartment/badges/gpa.svg)](https://codeclimate.com/github/influitive/apartment)
-[![Build Status](https://travis-ci.org/influitive/apartment.svg?branch=development)](https://travis-ci.org/influitive/apartment)
-
-*Multitenancy for Rails and ActiveRecord*
-
-Apartment provides tools to help you deal with multiple tenants in your Rails
-application. If you need to have certain data sequestered based on account or company,
-but still allow some data to exist in a common tenant, Apartment can help.
-
-## HELP!
-
-In order to help drive the direction of development and clean up the codebase, we'd like to take a poll
-on how people are currently using Apartment. If you can take 5 seconds (1 question) to answer
-this poll, we'd greatly appreciated it.
-
-[View Poll](http://www.poll-maker.com/poll391552x4Bfb41a9-15)
-
-## Excessive Memory Issues on ActiveRecord 4.x
-
-> If you're noticing ever growing memory issues (ie growing with each tenant you add)
-> when using Apartment, that's because there's [an issue](https://github.com/rails/rails/issues/19578)
-> with how ActiveRecord maps Postgresql data types into AR data types.
-> This has been patched and will be released for AR 4.2.2. It's apparently hard
-> to backport to 4.1 unfortunately.
-> If you're noticing high memory usage from ActiveRecord with Apartment please upgrade.
-
-```ruby
-gem 'rails', '4.2.1', github: 'influitive/rails', tag: 'v4.2.1.memfix'
-```
-
-## Installation
-
-### Rails
-
-Add the following to your Gemfile:
-
-```ruby
-gem 'multi'
-```
-
-Then generate your `Apartment` config file using
-
-```ruby
-bundle exec rails generate apartment:install
-```
-
-This will create a `config/initializers/apartment.rb` initializer file.
-Configure as needed using the docs below.
-
-That's all you need to set up the Apartment libraries. If you want to switch tenants
-on a per-user basis, look under "Usage - Switching tenants per request", below.
-
-> NOTE: If using [postgresql schemas](http://www.postgresql.org/docs/9.0/static/ddl-schemas.html) you must use:
->
-> * for Rails 3.1.x: _Rails ~> 3.1.2_, it contains a [patch](https://github.com/rails/rails/pull/3232) that makes prepared statements work with multiple schemas
-
-## Usage
-
 ### Video Tutorial
 
 How to separate your application data into different accounts or companies.
@@ -66,11 +5,8 @@ How to separate your application data into different accounts or companies.
 
 ### Creating new Tenants
 
-Before you can switch to a new apartment tenant, you will need to create it. Whenever
-you need to create a new tenant, you can run the following command:
-
 ```ruby
-Apartment::Tenant.create('tenant_name')
+Multi::Tenant.create('tenant_name')
 ```
 
 If you're using the [prepend environment](https://github.com/influitive/apartment#handling-environments) config option or you AREN'T using Postgresql Schemas, this will create a tenant in the following format: "#{environment}\_tenant_name".
@@ -99,32 +35,15 @@ Apartment::Tenant.switch('tenant_name') do
 end
 ```
 
-When switch is called, all requests coming to ActiveRecord will be routed to the tenant
-you specify (with the exception of excluded models, see below). The tenant is automatically
-switched back at the end of the block to what it was before.
-
-There is also `switch!` which doesn't take a block, but it's recommended to use `switch`.
-To return to the default tenant, you can call `switch` with no arguments.
+When switch is called, all requests coming to ActiveRecord will be routed to the tenant you specify.
 
 ### Switching Tenants per request
 
 You can have Apartment route to the appropriate tenant by adding some Rack middleware.
-Apartment can support many different "Elevators" that can take care of this routing to your data.
-
-**NOTE: when switching tenants per-request, keep in mind that the order of your Rack middleware is important.**
-See the [Middleware Considerations](#middleware-considerations) section for more.
-
-The initializer above will generate the appropriate code for the Subdomain elevator
-by default. You can see this in `config/initializers/apartment.rb` after running
-that generator. If you're *not* using the generator, you can specify your
-elevator below. Note that in this case you will **need** to require the elevator
-manually in your `application.rb` like so
-
 ```ruby
 # config/application.rb
-require 'apartment/elevators/subdomain' # or 'domain', 'first_subdomain', 'host'
+require 'multi/logic/subdomain'
 ```
-
 #### Switch on subdomain
 
 In house, we use the subdomain elevator, which analyzes the subdomain of the request and switches to a tenant schema of the same name. It can be used like so:
@@ -133,172 +52,35 @@ In house, we use the subdomain elevator, which analyzes the subdomain of the req
 # application.rb
 module MyApplication
   class Application < Rails::Application
-    config.middleware.use Apartment::Elevators::Subdomain
+    config.middleware.use Multi::Logic::Subdomain
   end
 end
 ```
 
-If you want to exclude a domain, for example if you don't want your application to treat www like a subdomain, in an initializer in your application, you can set the following:
-
+to exclude a domain
 ```ruby
-# config/initializers/apartment/subdomain_exclusions.rb
-Apartment::Elevators::Subdomain.excluded_subdomains = ['www']
-```
-
-This functions much in the same way as Apartment.excluded_models. This example will prevent switching your tenant when the subdomain is www. Handy for subdomains like: "public", "www", and "admin" :)
-
-#### Switch on first subdomain
-
-To switch on the first subdomain, which analyzes the chain of subdomains of the request and switches to a tenant schema of the first name in the chain (e.g. owls.birds.animals.com would switch to "owls"). It can be used like so:
-
-```ruby
-# application.rb
-module MyApplication
-  class Application < Rails::Application
-    config.middleware.use Apartment::Elevators::FirstSubdomain
-  end
-end
-```
-
-If you want to exclude a domain, for example if you don't want your application to treat www like a subdomain, in an initializer in your application, you can set the following:
-
-```ruby
-# config/initializers/apartment/subdomain_exclusions.rb
-Apartment::Elevators::FirstSubdomain.excluded_subdomains = ['www']
-```
-
-This functions much in the same way as the Subdomain elevator. **NOTE:** in fact, at the time of this writing, the `Subdomain` and `FirstSubdomain` elevators both use the first subdomain ([#339](https://github.com/influitive/apartment/issues/339#issuecomment-235578610)). If you need to switch on larger parts of a Subdomain, consider using a Custom Elevator.
-
-#### Switch on domain
-
-To switch based on full domain (excluding the 'www' subdomains and top level domains *ie '.com'* ) use the following:
-
-```ruby
-# application.rb
-module MyApplication
-  class Application < Rails::Application
-    config.middleware.use Apartment::Elevators::Domain
-  end
-end
-```
-
-Note that if you have several subdomains, then it will match on the first *non-www* subdomain:
-- example.com => example
-- www.example.com => example
-- a.example.com => a
-
-#### Switch on full host using a hash
-
-To switch based on full host with a hash to find corresponding tenant name use the following:
-
-```ruby
-# application.rb
-module MyApplication
-  class Application < Rails::Application
-    config.middleware.use Apartment::Elevators::HostHash, {'example.com' => 'example_tenant'}
-  end
-end
-```
-
-#### Switch on full host, ignoring given first subdomains
-
-To switch based on full host to find corresponding tenant name use the following:
-
-```ruby
-# application.rb
-module MyApplication
-  class Application < Rails::Application
-    config.middleware.use Apartment::Elevators::Host
-  end
-end
-```
-
-If you want to exclude a first-subdomain, for example if you don't want your application to include www in the matching, in an initializer in your application, you can set the following:
-
-```ruby
-Apartment::Elevators::Host.ignored_first_subdomains = ['www']
-```
-
-With the above set, these would be the results:
-- example.com => example.com
-- www.example.com => example.com
-- a.example.com => a.example.com
-- www.a.example.com => a.example.com
-
-#### Custom Elevator
-
-A Generic Elevator exists that allows you to pass a `Proc` (or anything that responds to `call`) to the middleware. This Object will be passed in an `ActionDispatch::Request` object when called for you to do your magic. Apartment will use the return value of this proc to switch to the appropriate tenant. Use like so:
-
-```ruby
-# application.rb
-module MyApplication
-  class Application < Rails::Application
-    # Obviously not a contrived example
-    config.middleware.use Apartment::Elevators::Generic, Proc.new { |request| request.host.reverse }
-  end
-end
-```
-
-Your other option is to subclass the Generic elevator and implement your own
-switching mechanism. This is exactly how the other elevators work. Look at
-the `subdomain.rb` elevator to get an idea of how this should work. Basically
-all you need to do is subclass the generic elevator and implement your own
-`parse_tenant_name` method that will ultimately return the name of the tenant
-based on the request being made. It *could* look something like this:
-
-```ruby
-# app/middleware/my_custom_elevator.rb
-class MyCustomElevator < Apartment::Elevators::Generic
-
-  # @return {String} - The tenant to switch to
-  def parse_tenant_name(request)
-    # request is an instance of Rack::Request
-
-    # example: look up some tenant from the db based on this request
-    tenant_name = SomeModel.from_request(request)
-
-    return tenant_name
-  end
-end
+# config/initializers/multi/subdomain_exclusions.rb
+Multi::Logic::Subdomain.excluded_subdomains = ['www']
 ```
 
 #### Middleware Considerations
 
-In the examples above, we show the Apartment middleware being appended to the Rack stack with
-
 ```ruby
-Rails.application.config.middleware.use Apartment::Elevators::Subdomain
+Rails.application.config.middleware.use Multi::Logic::Subdomain
 ```
-
-By default, the Subdomain middleware switches into a Tenant based on the subdomain at the beginning of the request, and when the request is finished, it switches back to the "public" Tenant. This happens in the [Generic](https://github.com/influitive/apartment/blob/development/lib/apartment/elevators/generic.rb#L22) elevator, so all elevators that inherit from this elevator will operate as such.
-
-It's also good to note that Apartment switches back to the "public" tenant any time an error is raised in your application.
-
-This works okay for simple applications, but it's important to consider that you may want to maintain the "selected" tenant through different parts of the Rack application stack. For example, the [Devise](https://github.com/plataformatec/devise) gem adds the `Warden::Manager` middleware at the end of the stack in the examples above, our `Apartment::Elevators::Subdomain` middleware would come after it. Trouble is, Apartment resets the selected tenant after the request is finish, so some redirects (e.g. authentication) in Devise will be run in the context of the "public" tenant. The same issue would also effect a gem such as the [better_errors](https://github.com/charliesome/better_errors) gem which inserts a middleware quite early in the Rails middleware stack.
-
-To resolve this issue, consider adding the Apartment middleware at a location in the Rack stack that makes sense for your needs, e.g.:
-
-```ruby
-Rails.application.config.middleware.insert_before Warden::Manager, Apartment::Elevators::Subdomain
-```
-
-Now work done in the Warden middleware is wrapped in the `Apartment::Tenant.switch` context started in the Generic elevator.
 
 ### Dropping Tenants
 
 To drop tenants using Apartment, use the following command:
 
 ```ruby
-Apartment::Tenant.drop('tenant_name')
+Multi::Tenant.drop('tenant_name')
 ```
-
-When method is called, the schema is dropped and all data from itself will be lost. Be careful with this method.
+When method is called, the schema is dropped and all data from itself will be lost.
 
 ## Config
 
-The following config options should be set up in a Rails initializer such as:
-
-    config/initializers/apartment.rb
+config/initializers/apartment.rb
 
 To set config options, add this to your initializer:
 
@@ -310,34 +92,26 @@ end
 
 ### Excluding models
 
-If you have some models that should always access the 'public' tenant, you can specify this by configuring Apartment using `Apartment.configure`. This will yield a config object for you. You can set excluded models like so:
+If you have some models that should always access the 'public' tenant, you can specify this by configuring Apartment using `Multi.configure`. This will yield a config object for you. You can set excluded models like so:
 
 ```ruby
-config.excluded_models = ["User", "Company"]        # these models will not be multi-tenanted, but remain in the global (public) namespace
+config.excluded_models = ["User", "Company"]        # remain in the global (public) namespace
 ```
-
-Note that a string representation of the model name is now the standard so that models are properly constantized when reloaded in development
-
-Rails will always access the 'public' tenant when accessing these models, but note that tables will be created in all schemas. This may not be ideal, but its done this way because otherwise rails wouldn't be able to properly generate the schema.rb file.
-
-> **NOTE - Many-To-Many Excluded Models:**
-> Since model exclusions must come from referencing a real ActiveRecord model, `has_and_belongs_to_many` is NOT supported. In order to achieve a many-to-many relationship for excluded models, you MUST use `has_many :through`. This way you can reference the join model in the excluded models configuration.
 
 ### Postgresql Schemas
 
 ## Providing a Different default_schema
 
-By default, ActiveRecord will use `"$user", public` as the default `schema_search_path`. This can be modified if you wish to use a different default schema be setting:
+By default, ActiveRecord will use `"$user", public` as the default `schema_search_path`.
 
 ```ruby
 config.default_schema = "some_other_schema"
 ```
 
-With that set, all excluded models will use this schema as the table name prefix instead of `public` and `reset` on `Apartment::Tenant` will return to this schema as well.
+all excluded models will use this schema as the table name prefix instead of `public` and `reset` on `Multi::Tenant`
 
 ## Persistent Schemas
-
-Apartment will normally just switch the `schema_search_path` whole hog to the one passed in. This can lead to problems if you want other schemas to always be searched as well. Enter `persistent_schemas`. You can configure a list of other schemas that will always remain in the search path, while the default gets swapped out:
+ Enter `persistent_schemas`. configure a list of other schemas that will always remain in the search path
 
 ```ruby
 config.persistent_schemas = ['some', 'other', 'schemas']
@@ -557,18 +331,3 @@ module Apartment
   end
 end
 ```
-
-## Contributing
-
-* In both `spec/dummy/config` and `spec/config`, you will see `database.yml.sample` files
-  * Copy them into the same directory but with the name `database.yml`
-  * Edit them to fit your own settings
-* Rake tasks (see the Rakefile) will help you setup your dbs necessary to run tests
-* Please issue pull requests to the `development` branch. All development happens here, master is used for releases.
-* Ensure that your code is accompanied with tests. No code will be merged without tests
-
-* If you're looking to help, check out the TODO file for some upcoming changes I'd like to implement in Apartment.
-
-## License
-
-Apartment is released under the [MIT License](http://www.opensource.org/licenses/MIT).

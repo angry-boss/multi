@@ -111,7 +111,7 @@ module Multi
   FileNotFound = Class.new(MultiError)
 
   # Tenant specified is unknown
-  MultiNotFound = Class.new(MultiError)
+  TenantNotFound = Class.new(MultiError)
 
   #The Tenant attempting to be created already exists
   TenantExists = Class.new(MultiError)

@@ -6,7 +6,7 @@ connections:
     username: postgres
     schema_search_path: public
     password:
-    host: localhost
+    host: 127.0.0.1
     port: 5432
 connection
   postgresql:
@@ -16,5 +16,5 @@ connection
     username: postgres
     schema_search_path: public
     password:
-    host: localhost
+    host: 127.0.0.1
     port: 5432
