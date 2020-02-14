@@ -20,9 +20,8 @@ Then,
 `lib/tasks/db_enhancements.rake`
 
 Put into file
-``
-# This task should be run AFTER db:create but  
-# BEFORE db:migrate.                        
+
+``                      
 
 namespace :db do
   desc 'Also create shared_extensions Schema'
@@ -47,7 +46,9 @@ end
 Rake::Task["db:test:purge"].enhance do
   Rake::Task["db:extensions"].invoke
 end
+
 ``
+
 2. Drop database, Create new, Run task, Make migration
 `` rake db:drop
    rake db:create
