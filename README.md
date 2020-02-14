@@ -1,8 +1,11 @@
 # Multi-tenancy
-## Installation
 Config:
-Create a `config/initializers/multi.rb` initializer file.
+
+Create initializer file.
+``config/initializers/multi.rb``
+
 Put into file
+
 ``
 require_relative '../lib/multi_tenancy/multi/logic/subdomain'
 
@@ -10,9 +13,12 @@ Multi.configure do |config|
   config.middleware.use Multi::Logic::Subdomain
 end
 ``
+
 Then,
 
-1. Create a `lib/tasks/db_enhancements.rake`
+1. Create
+`lib/tasks/db_enhancements.rake`
+
 Put into file
 ``
 # This task should be run AFTER db:create but  
