@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ### Video Tutorial
 
 How to separate your application data into different accounts or companies.
@@ -32,9 +33,25 @@ To switch tenants using Apartment, use the following command:
 ```ruby
 Apartment::Tenant.switch('tenant_name') do
   # ...
-end
-```
+=======
+# Multi-tenancy
+Config:
 
+Create initializer file.
+``config/initializers/multi.rb``
+
+Put into file
+
+``
+require_relative '../lib/multi_tenancy/multi/logic/subdomain'
+
+Multi.configure do |config|
+  config.middleware.use Multi::Logic::Subdomain
+>>>>>>> 32fffcbe59dba4c95eba98a30b7925682dcf8e58
+end
+``
+
+<<<<<<< HEAD
 When switch is called, all requests coming to ActiveRecord will be routed to the tenant you specify.
 
 ### Switching Tenants per request
@@ -141,6 +158,16 @@ When using extensions, keep in mind:
 # This task should be run AFTER db:create but    #
 # BEFORE db:migrate.                             #
 ##################################################
+=======
+Then,
+
+1. Create
+`lib/tasks/db_enhancements.rake`
+
+Put into file
+
+``                      
+>>>>>>> 32fffcbe59dba4c95eba98a30b7925682dcf8e58
 
 namespace :db do
   desc 'Also create shared_extensions Schema'
@@ -151,6 +178,8 @@ namespace :db do
     ActiveRecord::Base.connection.execute 'CREATE EXTENSION IF NOT EXISTS HSTORE SCHEMA shared_extensions;'
     # Enable UUID-OSSP
     ActiveRecord::Base.connection.execute 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA shared_extensions;'
+    # Enable pgcrypto
+    ActiveRecord::Base.connection.execute 'CREATE EXTENSION IF NOT EXISTS  "pgcrypto" SCHEMA shared_extensions;'
     # Grant usage to public
     ActiveRecord::Base.connection.execute 'GRANT usage ON SCHEMA shared_extensions to public;'
   end
@@ -163,12 +192,17 @@ end
 Rake::Task["db:test:purge"].enhance do
   Rake::Task["db:extensions"].invoke
 end
-```
 
-#### 2. Ensure the schema is in Rails' default connection
+``
 
-Next, your `database.yml` file must mimic what you've set for your default and persistent schemas in Apartment. When you run migrations with Rails, it won't know about the extensions schema because Apartment isn't injected into the default connection, it's done on a per-request basis, therefore Rails doesn't know about `hstore` or `uuid-ossp` during migrations.  To do so, add the following to your `database.yml` for all environments
-
+2. Drop database, Create new, Run task, Make migration
+`` rake db:drop
+   rake db:create
+   rake db:extensions
+   rake db:migrate
+``
+3. Add extensions into database.yml
+``
 ```yaml
 # database.yml
 ...
@@ -176,56 +210,73 @@ adapter: postgresql
 schema_search_path: "public,shared_extensions"
 ...
 ```
-
-This would be for a config with `default_schema` set to `public` and `persistent_schemas` set to `['shared_extensions']`. **Note**: This only works on Heroku with [Rails 4.1+](https://devcenter.heroku.com/changelog-items/426). For apps that use older Rails versions hosted on Heroku, the only way to properly setup is to start with a fresh PostgreSQL instance:
-
-1. Append `?schema_search_path=public,hstore` to your `DATABASE_URL` environment variable, by this you don't have to revise the `database.yml` file (which is impossible since Heroku regenerates a completely different and immutable `database.yml` of its own on each deploy)
-2. Run `heroku pg:psql` from your command line
-3. And then `DROP EXTENSION hstore;` (**Note:** This will drop all columns that use `hstore` type, so proceed with caution; only do this with a fresh PostgreSQL instance)
-4. Next: `CREATE SCHEMA IF NOT EXISTS hstore;`
-5. Finally: `CREATE EXTENSION IF NOT EXISTS hstore SCHEMA hstore;` and hit enter (`\q` to exit)
-
-To double check, login to the console of your Heroku app and see if `Apartment.connection.schema_search_path` is `public,hstore`
-
-#### 3. Ensure the schema is in the apartment config
-
+4. and now
 ```ruby
-# config/initializers/apartment.rb
+# config/initializers/multi.rb
 ...
 config.persistent_schemas = ['shared_extensions']
 ...
 ```
 
-#### Alternative: Creating schema by default
+## Usage
 
-Another way that we've successfully configured hstore for our applications is to add it into the
-postgresql template1 database so that every tenant that gets created has it by default.
+to create a new tenant, run the following command:
 
-One caveat with this approach is that it can interfere with other projects in development using the same extensions and template, but not using apartment with this approach.
-
-You can do so using a command like so
-
-```bash
-psql -U postgres -d template1 -c "CREATE SCHEMA shared_extensions AUTHORIZATION some_username;"
-psql -U postgres -d template1 -c "CREATE EXTENSION IF NOT EXISTS hstore SCHEMA shared_extensions;"
-```
-
-The *ideal* setup would actually be to install `hstore` into the `public` schema and leave the public
-schema in the `search_path` at all times. We won't be able to do this though until public doesn't
-also contain the tenanted tables, which is an open issue with no real milestone to be completed.
-Happy to accept PR's on the matter.
-
-#### Alternative: Creating new schemas by using raw SQL dumps
-
-Apartment can be forced to use raw SQL dumps insted of `schema.rb` for creating new schemas. Use this when you are using some extra features in postgres that can't be represented in `schema.rb`, like materialized views etc.
-
-This only applies while using postgres adapter and `config.use_schemas` is set to `true`.
-(Note: this option doesn't use `db/structure.sql`, it creates SQL dump by executing `pg_dump`)
-
-Enable this option with:
 ```ruby
-config.use_sql = true
+Multi::Tenant.create('tenant_name')
 ```
+### Switching Tenants
+
+To switch tenants using Multi, use the following command:
+
+```ruby
+Multi::Tenant.switch('tenant_name') do
+  # ...
+end
+```
+To return to the default tenant, call `switch` with no arguments.
+
+### Switching Tenants per request
+
+Multi is Rack middleware.
+Multi::Logic::Subdomain switch on your record and routing to your data.
+
+to exclude a domain, for example www like a subdomain, in an initializer set the following:
+
+```ruby
+# config/initializers/multi.rb
+Multi::Logic::Subdomain.excluded_subdomains = ['www']
+```
+
+
+#### Middleware Considerations
+
+In the examples above, we show the Apartment middleware being appended to the Rack stack with
+
+```ruby
+Rails.application.config.middleware.use Multi::Logic::Subdomain
+```
+important to consider that you may want to maintain the "selected" tenant through different parts of the Rack application stack. For example, devise, gem adds the `Warden::Manager` middleware at the end of the stack in the examples above, our `Apartment::Elevators::Subdomain` middleware would come after it. Trouble is, Multi resets the selected tenant and redirects authentication in context of the "public" tenant.
+To resolve this issue:
+
+```ruby
+Rails.application.config.middleware.insert_before Warden::Manager, Multi::Logic::Subdomain
+```
+
+To drop tenants:
+
+```ruby
+Multi::Tenant.drop('tenant_name')
+```
+
+schema is dropped and all data from itself
+
+### Excluding models
+
+```ruby
+config.excluded_models = ["User", "Company"]        # these models will not be multi-tenanted, but remain in the global (public) namespace
+```
+
 
 ### Managing Migrations
 
@@ -247,33 +298,11 @@ You can then migrate your tenants using the normal rake task:
 rake db:migrate
 ```
 
-This just invokes `Apartment::Tenant.migrate(#{tenant_name})` for each tenant name supplied
-from `Apartment.tenant_names`
+This just invokes `Multi::Tenant.migrate(#{tenant_name})`
 
-Note that you can disable the default migrating of all tenants with `db:migrate` by setting
-`Apartment.db_migrate_tenants = false` in your `Rakefile`. Note this must be done
-*before* the rake tasks are loaded. ie. before `YourApp::Application.load_tasks` is called
-
-#### Parallel Migrations
-
-Apartment supports parallelizing migrations into multiple threads when
-you have a large number of tenants. By default, parallel migrations is
-turned off. You can enable this by setting `parallel_migration_threads` to
-the number of threads you want to use in your initializer.
-
-Keep in mind that because migrations are going to access the database,
-the number of threads indicated here should be less than the pool size
-that Rails will use to connect to your database.
-
-### Handling Environments
-
-By default, when not using postgresql schemas, Apartment will prepend the environment to the tenant name
-to ensure there is no conflict between your environments. This is mainly for the benefit of your development
-and test environments. If you wish to turn this option off in production, you could do something like:
-
-```ruby
-config.prepend_environment = !Rails.env.production?
-```
+disable default migrating of all tenants with `db:migrate`
+`Multi.db_migrate_tenants = false` in your `Rakefile`.
+`Nlmt::Application.load_tasks`
 
 ## Tenants on different servers
 
@@ -291,8 +320,6 @@ config.tenant_names = {
     host: 'some_server',
     port: 5555,
     database: 'postgres' # this is not the name of the tenant's db
-                         # but the name of the database to connect to, before creating the tenant's db
-                         # mandatory in postgresql
   }
 }
 # or using a lambda:
@@ -303,13 +330,9 @@ config.tenant_names = lambda do
 end
 ```
 
-## Background workers
-
-See [apartment-sidekiq](https://github.com/influitive/apartment-sidekiq) or [apartment-activejob](https://github.com/influitive/apartment-activejob).
-
 ## Callbacks
 
-You can execute callbacks when switching between tenants or creating a new one, Apartment provides the following callbacks:
+execute callbacks when switching between tenants or creating a new one:
 
 - before_create
 - after_create
@@ -319,9 +342,9 @@ You can execute callbacks when switching between tenants or creating a new one, 
 You can register a callback using [ActiveSupport::Callbacks](https://api.rubyonrails.org/classes/ActiveSupport/Callbacks.html) the following way:
 
 ```ruby
-require 'apartment/adapters/abstract_adapter'
+require 'multi/adapters/abstract_adapter'
 
-module Apartment
+module Multi
   module Adapters
     class AbstractAdapter
       set_callback :switch, :before do |object|
@@ -331,3 +354,10 @@ module Apartment
   end
 end
 ```
+<<<<<<< HEAD
+=======
+
+## Tests
+
+* Rake tasks (in multi-tenancy) setup dbs for tests
+>>>>>>> 32fffcbe59dba4c95eba98a30b7925682dcf8e58
